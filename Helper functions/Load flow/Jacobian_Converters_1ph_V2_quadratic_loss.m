@@ -1,0 +1,168 @@
+function [J_AFEiR, J_AFEiX, J_AFErR, J_AFErX] = Jacobian_Converters_1ph_V2_quadratic_loss(E_re,E_im, E_star, Grid_para, Filter_para, J_EdiorR, J_EdiorX, J_EdioiR, J_EdioiX, J_PR, J_PX, J_QR, J_QX, J_AFEiR, J_AFEiX, J_AFErR, J_AFErX)
+
+    n_dc = Grid_para.n_dc;
+    n_ac = Grid_para.n_ac;
+    n_nodes = Grid_para.n_nodes;
+    n_ph = Grid_para.n_ph;
+    n_AFE = Grid_para.n_AFE;
+    AFE_type = Grid_para.AFE_type;
+    pos_ac3 = Grid_para.pos_ac3;
+    pos_dc3 = Grid_para.pos_dc3;
+    G = Grid_para.G;
+    B = Grid_para.B;
+    Y = complex(G,B);
+    E = complex(E_re,E_im);
+    S = E.*conj(Y*E);
+   
+    %IGBT loss model (accounting for this only improves the accuracy slightly)
+    I_b =Grid_para.Y_b*Grid_para.V_b;
+       
+   R = 0;
+   X = 0;
+
+    for p = 1:n_AFE
+        
+
+        if AFE_type(p) == "VdcQ"
+
+        %% Vdc
+        
+         
+             
+       
+           beta = -0;
+            gamma = -0;
+
+            P_0pn = (E_re(pos_ac3(p,1)).*( G(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) + G(pos_ac3(p,1),pos_ac3(p,1))*E_re(pos_ac3(p,1)) - B(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2)) - B(pos_ac3(p,1),pos_ac3(p,1))*E_im(pos_ac3(p,1))) + ...
+                    E_im(pos_ac3(p,1)).*(B(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) + B(pos_ac3(p,1),pos_ac3(p,1))*E_re(pos_ac3(p,1)) + G(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2)) + G(pos_ac3(p,1),pos_ac3(p,1))*E_im(pos_ac3(p,1)))) + ...
+                   (-beta*E_re(pos_ac3(p,2)) + beta*E_re(pos_ac3(p,1)) + gamma*E_im(pos_ac3(p,2)) - gamma*E_im(pos_ac3(p,1)));
+
+               
+%             S_loss = (complex(R,X)*A*YY(pos_ac3(p3,1),:)*E_star).*conj(A*YY(pos_ac3(p3,1),:)*E_star)
+%             S_ac = A*E_star(pos_ac3(p3,1),:).*conj(A*YY(pos_ac3(p3,1),:)*E_star)   
+%             S_dc = E_star(pos_dc3(p,1),:).*conj(YY(pos_dc3(p,1),:)*E_star) 
+%                
+%             
+%             real(( A*E_star(pos_ac3(p3,1),:) + (complex(R,X)*A*YY(pos_ac3(p3,1),:)*E_star)) .*conj(A*YY(pos_ac3(p3,1),:)*E_star)) + S_dc*[0;1;0]
+%             real(( A*E_star(pos_ac3(p3,1),:) - (complex(R,X)*A*YY(pos_ac3(p3,1),:)*E_star)) .*conj(A*YY(pos_ac3(p3,1),:)*E_star)) + S_dc*[0;1;0]
+%             real(( A*E_star(pos_ac3(p3,1),:) + 0*(complex(R,X)*A*YY(pos_ac3(p3,1),:)*E_star)) .*conj(A*YY(pos_ac3(p3,1),:)*E_star)) + S_dc*[0;1;0]
+
+%             Sdio_star = (Atot*E_star).*conj(Y*(Atot*E_star));
+%             P_0pn = real(Sdio_star(pos_ac3(p3,1)))
+    
+            alpha =  ( G(pos_dc3(p,1),pos_dc3(p,2))* E_re(pos_dc3(p,2)))^2 - 4 * G(pos_dc3(p,1),pos_dc3(p,1)) .* (P_0pn);
+
+            for o = 1:length(alpha)
+                if alpha(o) < 1e-12
+%                     P_0pn
+%                     alpha
+                    alpha(o) = 1;
+%                     disp('Warning: alpha is wrong')
+                end
+            end
+
+%           Ssysm =   Atot*E_star.*conj(Atot*(G+1i*B)*E_star)
+            
+            A1_re = -1./sqrt(alpha).* ( G(pos_ac3(p,1) ,pos_ac3(p,2) )*E_re(pos_ac3(p,1) ) + B(pos_ac3(p,1) ,pos_ac3(p,2) )*E_im(pos_ac3(p,1) ) - diag(beta));
+            A1_im = -1./sqrt(alpha).* (-B(pos_ac3(p,1) ,pos_ac3(p,2) )*E_re(pos_ac3(p,1) ) + G(pos_ac3(p,1) ,pos_ac3(p,2) )*E_im(pos_ac3(p,1) ) + diag(gamma));
+
+            A2_re = -1./sqrt(alpha).* ( G(pos_ac3(p,1) ,pos_ac3(p,2) )*E_re(pos_ac3(p,2) ) + 2*G(pos_ac3(p,1) ,pos_ac3(p,1) )*E_re(pos_ac3(p,1) ) - B(pos_ac3(p,1) ,pos_ac3(p,2) )*E_im(pos_ac3(p,2) ) + diag(beta));
+            A2_im = -1./sqrt(alpha).* ( B(pos_ac3(p,1) ,pos_ac3(p,2) )*E_re(pos_ac3(p,2) ) + G(pos_ac3(p,1) ,pos_ac3(p,2) )*E_im(pos_ac3(p,2) ) + 2*G(pos_ac3(p,1) ,pos_ac3(p,1) )*E_im(pos_ac3(p,1) ) - diag(gamma));
+
+
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,2) ) = A1_re;
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,1) ) = A2_re;
+            J_AFErR(pos_ac3(p,1),pos_dc3(p,2) ) = -G(pos_dc3(p,1) ,pos_dc3(p,2) )/(2*G(pos_dc3(p,1) ,pos_dc3(p,1) )) + G(pos_dc3(p,1) ,pos_dc3(p,2) )^2 * E_re(pos_dc3(p,2) ) / ( 2* G(pos_dc3(p,1) ,pos_dc3(p,1) ) * sqrt(alpha) );
+
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,2) ) = A1_im;
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,1) ) = A2_im;
+
+        %% Q
+        
+            J_AFEiR(pos_ac3(p,1),: ) = J_QR(pos_ac3(p,1),: );
+            J_AFEiX(pos_ac3(p,1),: ) = J_QX(pos_ac3(p,1),: );
+          
+        elseif AFE_type(p) == "PQ"
+
+        %% P  
+
+            J_AFErR(pos_ac3(p,1),: ) = J_PR(pos_ac3(p,1),: );
+            J_AFErX(pos_ac3(p,1),: ) = J_PX(pos_ac3(p,1),: );
+            
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,1) ) = J_AFErR(pos_ac3(p,1),pos_ac3(p,1) ) + 2*R*E_re(pos_ac3(p,1))' - 2*R*E_re(pos_ac3(p,2))' - 2*X*E_im(pos_ac3(p,1))' + 2*X*E_im(pos_ac3(p,2))';
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,2) ) = J_AFErR(pos_ac3(p,1),pos_ac3(p,2) ) - 2*R*E_re(pos_ac3(p,1))' + 2*R*E_re(pos_ac3(p,2))' + 2*X*E_im(pos_ac3(p,1))' - 2*X*E_im(pos_ac3(p,2))';
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,1) ) = J_AFErX(pos_ac3(p,1),pos_ac3(p,1) ) - 2*X*E_re(pos_ac3(p,1))' + 2*X*E_re(pos_ac3(p,2))' - 2*R*E_im(pos_ac3(p,1))' + 2*R*E_im(pos_ac3(p,2))';
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,2) ) = J_AFErX(pos_ac3(p,1),pos_ac3(p,2) ) + 2*X*E_re(pos_ac3(p,1))' - 2*X*E_re(pos_ac3(p,2))' + 2*R*E_im(pos_ac3(p,1))' - 2*R*E_im(pos_ac3(p,2))';
+           
+        %% Q
+
+            J_AFEiR(pos_ac3(p,1),: ) = J_QR(pos_ac3(p,1),: );
+            J_AFEiX(pos_ac3(p,1),: ) = J_QX(pos_ac3(p,1),: );
+
+        elseif AFE_type(p) == "VV"
+            
+            
+            % real part
+            a = G(pos_ac3(p,1),pos_ac3(p,1));
+            b = real(conj(Y(pos_ac3(p,1),pos_ac3(p,2))* (E(pos_ac3(p,2)))));
+            c = + G(pos_ac3(p,1),pos_ac3(p,1)) * imag(E(pos_ac3(p,1))).^2  ...
+                - imag(E(pos_ac3(p,1))) .* imag(conj(Y(pos_ac3(p,1),pos_ac3(p,2))* E(pos_ac3(p,2)))) ...
+                + real(S(pos_dc3(p,1)));
+
+            beta = conj(Y(pos_ac3(p,1),pos_ac3(p,2))* (E(pos_ac3(p,2))));
+            alpha = (b.^2-4 .*a .*c);
+            
+            for o = 1:length(alpha)
+                if alpha(o) < 1e-12
+                    alpha(o) = 1;
+%                     disp('Warning: alpha is wrong')
+                end
+            end
+            
+            % i real
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,2) ) =-1./(2*a) * G(pos_ac3(p,1),pos_ac3(p,2)) +  1./(2*a*2.*sqrt(alpha)) * (2 * (G(pos_ac3(p,1),pos_ac3(p,2)))^2 * E_re(pos_ac3(p,2)) - G(pos_ac3(p,1),pos_ac3(p,2))*B(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2)) - 4*a*B(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,1)) );
+            % l real
+            J_AFErR(pos_ac3(p,1),pos_ac3(p,1) ) = 1;
+            % j
+            J_AFErR(pos_ac3(p,1),pos_dc3(p,2) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*(  G(pos_dc3(p,1) ,pos_dc3(p,2))*real(E(pos_dc3(p,1)))  )       );
+            % k
+            J_AFErR(pos_ac3(p,1),pos_dc3(p,1) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*(2*G(pos_dc3(p,1) ,pos_dc3(p,1))*real(E(pos_dc3(p,1))) +  G(pos_dc3(p,1) ,pos_dc3(p,2))*real(E(pos_dc3(p,2))) )   );
+            % i imag
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,2) ) =-1./(2*a) * (- B(pos_ac3(p,1),pos_ac3(p,2))) + 1./(2*a*2.*sqrt(alpha)) * ( 2* (B(pos_ac3(p,1),pos_ac3(p,2)))^2 * E_im(pos_ac3(p,2)) - G(pos_ac3(p,1),pos_ac3(p,2))*B(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) - 4*a*G(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,1))   );
+            % l imag
+            J_AFErX(pos_ac3(p,1),pos_ac3(p,1) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*( 2*G(pos_ac3(p,1),pos_ac3(p,1))*E_im(pos_ac3(p,1)) + G(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2)) + B(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) )      );
+
+            % imag part
+            a = diag(G(pos_ac3(p,1),pos_ac3(p,1)));
+            b = -imag(conj(Y(pos_ac3(p,1),pos_ac3(p,2))* (E(pos_ac3(p,2)))));
+            c = + G(pos_ac3(p,1),pos_ac3(p,1)) * real(E(pos_ac3(p,1))).^2 ...
+                + real(E(pos_ac3(p,1))) .* real(conj(Y(pos_ac3(p,1),pos_ac3(p,2))* (E(pos_ac3(p,2))))) ...
+                + real(S(pos_dc3(p,1)));
+
+            beta = conj(Y(pos_ac3(p,1),pos_ac3(p,2))* (E(pos_ac3(p,2))));
+            alpha = (b.^2-4 .*a .*c);
+            
+            for o = 1:length(alpha)
+                if alpha(o) < 1e-12
+                    alpha(o) = 1;
+%                     disp('Warning: alpha is wrong')
+                end
+            end
+            
+            % i real
+            J_AFEiR(pos_ac3(p,1),pos_ac3(p,2) ) = -1./(2*a) * B(pos_ac3(p,1),pos_ac3(p,2)) +  1./(2*a*2*sqrt(alpha)) * (2 * (B(pos_ac3(p,1),pos_ac3(p,2)))^2 * E_re(pos_ac3(p,2)) + G(pos_ac3(p,1),pos_ac3(p,2))*B(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2)) - 4*a*G(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,1)) );
+            % l real
+            J_AFEiR(pos_ac3(p,1),pos_ac3(p,1) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*( 2*G(pos_ac3(p,1),pos_ac3(p,1))*E_re(pos_ac3(p,1)) + G(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) - B(pos_ac3(p,1),pos_ac3(p,2))*E_im(pos_ac3(p,2))   )    );
+            % j
+            J_AFEiR(pos_ac3(p,1),pos_dc3(p,2) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*(  G(pos_dc3(p,1) ,pos_dc3(p,2))*E_re(pos_dc3(p,1))  )       );
+            % k
+            J_AFEiR(pos_ac3(p,1),pos_dc3(p,1) ) = 1./(2*a*2.*sqrt(alpha)) * (-4*a*( 2*G(pos_dc3(p,1) ,pos_dc3(p,1))*E_re(pos_dc3(p,1)) +  G(pos_dc3(p,1) ,pos_dc3(p,2))*E_re(pos_dc3(p,2)) )   );
+            % i imag
+            J_AFEiX(pos_ac3(p,1),pos_ac3(p,2) ) =-1./(2*a) * (G(pos_ac3(p,1),pos_ac3(p,2))) + 1./(2*a*2.*sqrt(alpha)) * ( 2* (G(pos_ac3(p,1),pos_ac3(p,2)))^2 * E_im(pos_ac3(p,2)) + G(pos_ac3(p,1),pos_ac3(p,2))*B(pos_ac3(p,1),pos_ac3(p,2))*E_re(pos_ac3(p,2)) - 4*a*(-B(pos_ac3(p,1),pos_ac3(p,2)))*E_re(pos_ac3(p,1))   );
+            % l imag
+            J_AFEiX(pos_ac3(p,1),pos_ac3(p,1) ) = 1;
+            
+        end
+    end
+
+end

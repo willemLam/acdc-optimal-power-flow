@@ -1,0 +1,17 @@
+{"Grid":
+	{
+	"Buses": [
+		{
+		"Name":"Name",
+		"Terminals":[{"V_abs":230,"V_arg":0,"P":10000,"Q":1000}]
+		}
+	],
+	"Lines": [
+		{
+		"From":"Start Bus",
+		"To":"End Bus",	
+		"Conductors": [{"I_abs":10,"I_arg":0}]
+		}
+	]
+	}
+}
