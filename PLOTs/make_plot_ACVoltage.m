@@ -12,9 +12,9 @@ colorblindSet = {[215,25,28]/255;[253,174,97]/255;[171,217,233]*.8/255;[44,123,1
 
 f = figure('Renderer', 'painters', 'Position', [10 10 850 400]);
     hold on 
-        data_V19= abs(solution.variables_E(:,19)*Grid_para.V_b);
-        data_Vup= abs(solution.V_upstream*Grid_para.V_b);
-        data_Vdown = abs(solution.V_downstream*Grid_para.V_b);
+        data_V19= abs(solution.variables_E(:,19)*Grid_para.V_b)/sqrt(3);
+        data_Vup= abs(solution.V_upstream*Grid_para.V_b)/sqrt(3);
+        data_Vdown = abs(solution.V_downstream*Grid_para.V_b)/sqrt(3);
         
         min_v = -2 + min(min([data_V19(range),data_Vup(range),data_Vdown(range)]));
         max_v = 3 + max(max([data_V19(range),data_Vup(range),data_Vdown(range)]));

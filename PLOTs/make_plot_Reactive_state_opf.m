@@ -3,10 +3,12 @@ function f = make_plot_Reactive_state_opf(solution,Grid_para,range,modeColors)
 f = figure('Renderer', 'painters', 'Position', [10 10 850 850]);
 tiledlayout(4,1, 'TileSpacing', 'Compact'); 
 
+m = 1;
+
 nexttile
     hold on 
-        data_opf = imag(solution.reconstructed_S(range,9))*Grid_para.A_b;
-        data_state = imag(solution.variables_S(range,9))*Grid_para.A_b;
+        data_opf = movmean(imag(solution.reconstructed_S(range,9))*Grid_para.A_b,m);
+        data_state = movmean(imag(solution.variables_S(range,9))*Grid_para.A_b,m);
         
         min_v = -400+min(min(data_opf,data_state));
         max_v =  400+max(max(data_opf,data_state));
@@ -27,8 +29,8 @@ nexttile
 
 nexttile
     hold on 
-        data_opf = imag(solution.reconstructed_S(range,19))*Grid_para.A_b;
-        data_state = imag(solution.variables_S(range,19))*Grid_para.A_b;
+        data_opf = movmean(imag(solution.reconstructed_S(range,19))*Grid_para.A_b,m);
+        data_state = movmean(imag(solution.variables_S(range,19))*Grid_para.A_b,m);
         
         min_v = -400+min(min(data_opf,data_state));
         max_v =  400+max(max(data_opf,data_state));
@@ -46,8 +48,8 @@ nexttile
 
 nexttile
     hold on 
-        data_opf = imag(solution.reconstructed_S(range,20))*Grid_para.A_b;
-        data_state = imag(solution.variables_S(range,20))*Grid_para.A_b;
+        data_opf = movmean(imag(solution.reconstructed_S(range,20))*Grid_para.A_b,m);
+        data_state = movmean(imag(solution.variables_S(range,20))*Grid_para.A_b,m);
         
         min_v = -400+min(min(data_opf,data_state));
         max_v =  400+max(max(data_opf,data_state));
@@ -65,8 +67,8 @@ nexttile
 
  nexttile
     hold on 
-        data_opf = imag(solution.reconstructed_S(range,21))*Grid_para.A_b - 800;
-        data_state = imag(solution.variables_S(range,21))*Grid_para.A_b;
+        data_opf = movmean(imag(solution.reconstructed_S(range,21))*Grid_para.A_b,m);
+        data_state = movmean(imag(solution.variables_S(range,21))*Grid_para.A_b,m);
         
         min_v = -400+min(min(data_opf,data_state));
         max_v =  400+max(max(data_opf,data_state));
